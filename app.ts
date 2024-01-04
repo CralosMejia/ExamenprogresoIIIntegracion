@@ -7,23 +7,31 @@ const app = express();
 const PORT = 3000;
 
 app.get('/api/:usuarioPar', async (req: Request, res: Response) => {
-
+    let message;
     try{
         const{usuarioPar}=req.params
         let usuario:any
         await modelExamen.usuario.findOne({raw: true, where: { 'Usuario': usuarioPar } }).then((res:any)=>{
             usuario=res
         })
-        if(usuario){
-            await llamadaApiGeo(usuario.ciudad)
+        if(!usuario){
+          message=`Error al encontra un usuario`
+          throw new Error(`Error al encontra un usuario`);
+
         }
 
+        const localization=await llamadaApiGeo(usuario.ciudad)
 
-        res.json(usuario);
+        const resp={
+            usuario,
+            localization
+        }
+
+        res.status(200).json(resp);
 
     }catch (error:any) {
         console.error('Error al realizar la petición:', error.message);
-        res.json('Ocurrio error');
+        res.status(400).json(message);
 
     }
     
